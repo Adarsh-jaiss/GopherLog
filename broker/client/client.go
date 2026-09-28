@@ -56,12 +56,20 @@ func HandleConnection(conn net.Conn) {
 
 		log.Println("Received payload:", string(payload))
 
-		err = writeFrame(conn, []byte("PONG"))
-		if err != nil {
-			return
-		}
+		// err = writeFrame(conn, []byte("PONG"))
+		// if err != nil {
+
+		// 	return
+		// }
 
 		// Decode requests
+		decodedPayload, err := decodeRequest(payload)
+		if err!=nil {
+			log.Println("err decoding req:",err)
+			return
+		}
+		_ = decodedPayload
+
 		// Route requests
 		// Write responses
 	}

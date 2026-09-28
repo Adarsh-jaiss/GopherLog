@@ -1,38 +1,60 @@
 package client
 
+import (
+	"encoding/binary"
+	"errors"
+)
+
 const (
-	APIProduce   uint16 = 1
-	APIFetch     uint16 = 2
-	APIOffset    uint16 = 3
-	APICommit    uint16 = 4
-	APIJoinGroup uint16 = 5
+	APIProduce uint16 = iota
+	APIFetch
+	APIOffset
+	APICommit
+	APIJoinGroup
 )
 
 type Request struct {
-	ID      uint64
+	ID      uint32
 	APIKey  uint16
 	Version uint16
 	Body    []byte
 }
 
-// func route(req Request) Response {
-// 	switch req.APIKey {
-// 	case APIProduce:
-// 		return handleProduce(req)
+type Response struct{}
 
-// 	case APIFetch:
-// 		return handleFetch(req)
+func decodeRequest(data []byte) (*Request, error) {
+	if len(data) < 8 {
+		return nil, errors.New("invalid request")
+	}
 
-// 	case APIOffset:
-// 		return handleOffset(req)
+	req := &Request{
+		ID:      binary.BigEndian.Uint32(data[0:4]),
+		APIKey:  binary.BigEndian.Uint16(data[4:6]),
+		Version: binary.BigEndian.Uint16(data[6:8]),
+		Body:    data[8:],
+	}
 
-// 	case APICommit:
-// 		return handleCommit(req)
+	return req, nil
+}
 
-// 	case APIJoinGroup:
-// 		return handleJoinGroup(req)
+func route(req Request) *Response {
+	switch req.APIKey {
+	case APIProduce:
+		return handleProduce(req)
 
-// 	default:
-// 		return errorResponse("unknown API")
-// 	}
-// }
+	case APIFetch:
+		return handleFetch(req)
+
+	case APIOffset:
+		return handleOffset(req)
+
+	case APICommit:
+		return handleCommit(req)
+
+	case APIJoinGroup:
+		return handleJoinGroup(req)
+
+	default:
+		return errorResponse("unknown API")
+	}
+}

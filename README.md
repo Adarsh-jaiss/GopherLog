@@ -6,6 +6,31 @@ Build a fault-tolerant message queue from scratch (a lightweight Kafka or Rabbit
 * **Design Challenges:** Ensuring zero-data-loss during node crashes, managing consumer offsets, achieving high-throughput zero-copy reads, and handling split-brain network partitions.
 * **Tech Stack:** Go (custom TCP server), gRPC/Protobufs for inter-node communication, and embedded KV stores.
 
+```
+                GopherLog
+                   │
+       ┌───────────┴───────────┐
+       │                       │
+   Client TCP              Inter-node
+       │                    gRPC/Proto
+       ▼                       │
+   Request Router              ▼
+       │                      Raft
+   ┌───┴────┐                  │
+   ▼        ▼                  ▼
+Produce   Fetch             Replicated
+   │        │                 State
+   └───┬────┘
+       ▼
+   Partitions
+       │
+       ▼
+      WAL
+       │
+       ▼
+ Embedded KV
+```
+
 ## arch
 
 ```
@@ -68,3 +93,7 @@ BROKER NODE                                     │
                            │   Node 2 (:9093)  │  Node 3 (:9093)     │
                            └───────────────────┴─────────────────────┘
 ```
+
+# further optimizations :
+
+- per-partition sparse offset indexes as a later storage optimization.
